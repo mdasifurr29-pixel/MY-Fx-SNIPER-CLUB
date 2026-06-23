@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Signal Pro - Exness Gold XAUUSD</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+  body { background: #0a0e27; color: #fff; overflow-x: hidden; }
+  
+  .header {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 20px rgba(79, 70, 229, 0.4);
+  }
+  .header h1 { font-size: 18px; font-weight: 700; }
+  .header h1 span { color: #fbbf24; }
+  .header-info { display: flex; gap: 15px; align-items: center; font-size: 12px; }
+  .live-dot { width: 9px; height: 9px; background: #10b981; border-radius: 50%; animation: pulse 1.5s infinite; display: inline-block; margin-right: 5px; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+  
+  .container { display: grid; grid-template-columns: 1fr 380px; gap: 12px; padding: 12px; height: calc(100vh - 60px); }
+  
+  .chart-section { 
+    background: #111827; border-radius: 12px; padding: 10px; 
+    display: flex; flex-direction: column; border: 1px solid #1f2937;
+  }
+  .chart-controls { 
+    display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; align-items: center; 
+  }
+  .chart-controls label { font-size: 11px; color: #9ca3af; }
+  .chart-controls select {
+    background: #1f2937; color: #fff; border: 1px solid #374151;
+    padding: 5px 8px; border-radius: 5px; font-size: 11px; outline: none;
+  }
+  .btn {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: #fff; border: none; padding: 6px 12px; border-radius: 5px;
+    cursor: pointer; font-size: 11px; font-weight: 600;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-success { background: linear-gradient(135deg, #10b981, #059669); }
+  .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  .btn-whatsapp { background: linear-gradient(135deg, #25d366, #128c7e); }
+  .btn-telegram { background: linear-gradient(135deg, #0088cc, #005f8c); }
+  .btn-copy { 
+    background: linear-gradient(135deg, #f59e0b, #d97706); 
+    color: #fff; border: none; padding: 3px 7px; border-radius: 4px;
+    cursor: pointer; font-size: 9px; margin-left: 5px;
+  }
+  
+  .tv-chart-wrapper {
+    flex: 1;
+    width: 100%;
+    height: 420px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #131722;
+    position: relative;
+  }
+  .tv-chart-wrapper iframe { width: 100%; height: 100%; border: none; }
+  
+  .loading-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+  }
+  .loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #1f2937;
+    border-top: 4px solid #4f46e5;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .loading-text {
+    margin-top: 15px;
+    color: #9ca3af;
+    font-size: 14px;
+  }
+  
+  .dashboard { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding-right: 3px; }
+  
+  .card {
+    background: linear-gradient(145deg, #111827, #0f172a);
+    border: 1px solid #1f2937;
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .card-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #1f2937;
+  }
+  .card-title { font-size: 11px; font-weight: 700; color: #9ca3af; letter-spacing: 1px; text-transform: uppercase; }
+  .card-badge { font-size: 9px; padding: 2px 6px; border-radius: 8px; background: #4f46e5; color: #fff; }
+  
+  .signal-box {
+    text-align: center; padding: 12px; border-radius: 8px;
+    font-size: 16px; font-weight: 800; letter-spacing: 2px;
+    background: linear-gradient(135deg, #374151, #1f2937);
+    margin-bottom: 8px;
+  }
+  .signal-box.buy { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+  .signal-box.sell { background: linear-gradient(135deg, #ef4444, #dc2626); color: #fff; }
+  .signal-box.neutral { background: linear-gradient(135deg, #4b5563, #374151); color: #9ca3af; }
+  
+  .info-row { 
+    display: flex; justify-content: space-between; padding: 6px 0; 
+    border-bottom: 1px dashed #1f2937; font-size: 12px; align-items: center; 
+  }
+  .info-row:last-child { border-bottom: none; }
+  .info-label { color: #9ca3af; }
+  .info-value { font-weight: 700; font-family: 'Courier New', monospace; }
+  .info-value.green { color: #10b981; }
+  .info-value.red { color: #ef4444; }
+  .info-value.blue { color: #3b82f6; }
+  .info-value.yellow { color: #fbbf24; }
+  .info-value.orange { color: #f97316; }
+  .info-value.purple { color: #a855f7; }
+  
+  .session-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .session-asian { background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid #3b82f6; }
+  .session-london { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
+  .session-ny { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+  
+  .trend-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .trend-up { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
+  .trend-down { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+  
+  .tp-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 8px; }
+  .tp-box {
+    background: #1f2937; padding: 8px; border-radius: 6px; text-align: center;
+    border: 1px solid #374151;
+  }
+  .tp-box.hit { background: linear-gradient(135deg, #10b981, #059669); border-color: #10b981; }
+  .tp-label { font-size: 9px; color: #9ca3af; font-weight: 700; margin-bottom: 3px; }
+  .tp-box.hit .tp-label { color: #fff; }
+  .tp-price { font-size: 11px; font-weight: 700; font-family: monospace; }
+  .tp-status { font-size: 8px; margin-top: 3px; color: #6b7280; }
+  .tp-box.hit .tp-status { color: #fff; }
+  
+  .pnl-box {
+    text-align: center; padding: 12px; border-radius: 8px;
+    font-size: 18px; font-weight: 800; font-family: monospace;
+    background: #1f2937;
+  }
+  .pnl-box.positive { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid #10b981; }
+  .pnl-box.negative { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid #ef4444; }
+  
+  .status-pill { display: inline-block; padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+  .status-pill.active { background: #3b82f6; color: #fff; }
+  .status-pill.win { background: #10b981; color: #fff; }
+  .status-pill.loss { background: #ef4444; color: #fff; }
+  .status-pill.wait { background: #6b7280; color: #fff; }
+  
+  .settings-section { margin-bottom: 12px; }
+  .settings-section-title { 
+    font-size: 10px; color: #8b5cf6; font-weight: 700; 
+    margin-bottom: 6px; border-bottom: 1px solid #374151; padding-bottom: 3px;
+  }
+  .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .settings-grid label { font-size: 10px; color: #9ca3af; display: block; margin-bottom: 3px; }
+  .settings-grid input {
+    width: 100%; background: #1f2937; color: #fff; border: 1px solid #374151;
+    padding: 5px 7px; border-radius: 5px; font-size: 11px; outline: none;
+  }
+  .settings-grid input:focus { border-color: #8b5cf6; }
+  .btn-settings { 
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed); 
+    width: 100%; margin-top: 10px; padding: 9px; font-size: 12px;
+    color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;
+  }
+  
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; }
+  .toggle-label { font-size: 11px; color: #d1d5db; display: flex; align-items: center; gap: 6px; }
+  .toggle-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .toggle-switch { position: relative; width: 40px; height: 20px; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #374151; transition: .3s; border-radius: 20px;
+  }
+  .toggle-slider:before {
+    position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px;
+    background-color: white; transition: .3s; border-radius: 50%;
+  }
+  .toggle-switch input:checked + .toggle-slider { background-color: #10b981; }
+  .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
+  
+  .log-box { max-height: 120px; overflow-y: auto; font-size: 10px; font-family: monospace; }
+  .log-entry { padding: 3px 6px; border-left: 3px solid #4f46e5; background: #1f2937; margin-bottom: 2px; border-radius: 2px; }
+  .log-entry.buy { border-left-color: #10b981; }
+  .log-entry.sell { border-left-color: #ef4444; }
+  .log-entry.tp { border-left-color: #fbbf24; }
+  .log-time { color: #6b7280; margin-right: 4px; }
+  
+  .gold-badge {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: #000; padding: 3px 10px; border-radius: 12px;
+    font-weight: 700; font-size: 11px;
+  }
+  
+  .broker-badge {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff; padding: 3px 10px; border-radius: 12px;
+    font-weight: 700; font-size: 10px;
+  }
+  
+  .notification-setup {
+    background: #1f2937; padding: 8px; border-radius: 6px; margin-top: 8px;
+  }
+  .notification-setup label { display: block; margin-bottom: 4px; color: #9ca3af; font-size: 10px; }
+  .notification-setup input {
+    width: 100%; background: #0a0e27; color: #fff; border: 1px solid #374151;
+    padding: 4px 6px; border-radius: 4px; font-size: 10px; margin-bottom: 6px;
+  }
+  
+  .signal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 8px; }
+
+  .fx-sniper-footer {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    border-top: 2px solid #4f46e5;
+    padding: 15px 20px;
+    text-align: center;
+    margin-top: 20px;
+    border-radius: 8px;
+  }
+  .fx-sniper-footer h2 {
+    color: #fbbf24;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+  }
+  .fx-sniper-footer p {
+    color: #9ca3af;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  @media (max-width: 1100px) {
+    .container { grid-template-columns: 1fr; height: auto; }
+    .chart-section { height: 500px; }
+  }
+  
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #0a0e27; }
+  ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚡ SMART <span>SIGNAL PRO</span> - EXNESS GOLD</h1>
+  <div class="header-info">
+    <span class="broker-badge">🏦 EXNESS</span>
+    <span class="gold-badge">🥇 XAU/USD</span>
+    <span><span class="live-dot"></span>LIVE</span>
+    <span id="headerPrice">Loading...</span>
+  </div>
+</div>
+
+<div class="container">
+  <div class="chart-section">
+    <div class="chart-controls">
+      <label>Timeframe:</label>
+      <select id="intervalSelect" onchange="changeTimeframe()">
+        <option value="1">1m</option>
+        <option value="5" selected>5m</option>
+        <option value="15">15m</option>
+        <option value="60">1h</option>
+        <option value="240">4h</option>
+        <option value="D">1D</option>
+      </select>
+      <button class="btn" onclick="loadAndAnalyze()">🔄 Load & Analyze</button>
+      <button class="btn btn-success" onclick="toggleAutoRefresh()">⏱️ <span id="autoBtn">Auto: OFF</span></button>
+    </div>
+    <div class="tv-chart-wrapper" id="tvChartWrapper">
+      <div class="loading-overlay" id="chartLoading">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading Chart...</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="dashboard">
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📡 SIGNAL STATUS</div>
+        <div class="card-badge">LIVE</div>
+      </div>
+      <div id="signalBox" class="signal-box neutral">⚪ NO TRADE</div>
+      <div class="info-row">
+        <span class="info-label">Status</span>
+        <span id="tradeStatus" class="status-pill wait">⏳ WAITING</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Market Session</span>
+        <span id="marketSession" class="session-badge session-asian">🌏 Asian</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Current Trend</span>
+        <span id="currentTrend" class="trend-badge trend-up">📈 UPTREND</span>
+      </div>
+      <div id="signalActions" style="display:none;">
+        <div class="signal-actions">
+          <button class="btn btn-whatsapp" onclick="sendWhatsApp()">📱 WhatsApp</button>
+          <button class="btn btn-telegram" onclick="sendTelegram()">✈️ Telegram</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">💰 EXNESS GOLD LEVELS</div>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Current Gold</span>
+        <span id="currentPrice" class="info-value yellow">---</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Entry Price</span>
+        <span>
+          <span id="entryPrice" class="info-value">---</span>
+          <button class="btn-copy" onclick="copyPrice('entryPrice')">📋</button>
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Stop Loss</span>
+        <span>
+          <span id="slPrice" class="info-value red">---</span>
+          <button class="btn-copy" onclick="copyPrice('slPrice')">📋</button>
+        </span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">ATR Value</span>
+        <span id="atrValue" class="info-value orange">---</span>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🎯 TAKE PROFIT</div>
+      </div>
+      <div class="tp-row">
+        <div id="tp1Box" class="tp-box">
+          <div class="tp-label">TP1 (1R)</div>
+          <div class="tp-price" id="tp1Price">---</div>
+          <div class="tp-status" id="tp1Status">Pending</div>
+          <button class="btn-copy" style="margin-top:4px;" onclick="copyPrice('tp1Price')">📋</button>
+        </div>
+        <div id="tp2Box" class="tp-box">
+          <div class="tp-label">TP2 (2R)</div>
+          <div class="tp-price" id="tp2Price">---</div>
+          <div class="tp-status" id="tp2Status">Pending</div>
+          <button class="btn-copy" style="margin-top:4px;" onclick="copyPrice('tp2Price')">📋</button>
+        </div>
+        <div id="tp3Box" class="tp-box">
+          <div class="tp-label">TP3 (3R)</div>
+          <div class="tp-price" id="tp3Price">---</div>
+          <div class="tp-status" id="tp3Status">Pending</div>
+          <button class="btn-copy" style="margin-top:4px;" onclick="copyPrice('tp3Price')">📋</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">💹 LIVE P&L</div>
+      </div>
+      <div id="pnlBox" class="pnl-box">---</div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📊 CHART LINES</div>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">
+          <span class="toggle-dot" style="background:#fbbf24;"></span>
+          SMA 30
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggleSMA" checked onchange="reloadChart()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">
+          <span class="toggle-dot" style="background:#10b981;"></span>
+          Fast EMA 5
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggleEmaFast" checked onchange="reloadChart()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">
+          <span class="toggle-dot" style="background:#ef4444;"></span>
+          Slow EMA 13
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggleEmaSlow" checked onchange="reloadChart()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🔔 NOTIFICATIONS</div>
+      </div>
+      <div class="notification-setup">
+        <label>WhatsApp Number (with +):</label>
+        <input type="text" id="whatsappNumber" placeholder="+8801XXXXXXXXX">
+        
+        <label>Telegram Bot Token:</label>
+        <input type="text" id="telegramBotToken" placeholder="123456:ABC-DEF...">
+        
+        <label>Telegram Chat ID:</label>
+        <input type="text" id="telegramChatId" placeholder="-1001234567890">
+        
+        <button class="btn-settings" onclick="saveNotificationSettings()">💾 Save Settings</button>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">⚙️ INDICATOR SETTINGS</div>
+      </div>
+      
+      <div class="settings-section">
+        <div class="settings-section-title">🟡 LONG SIGNAL PRO (TREND)</div>
+        <div class="settings-grid">
+          <div>
+            <label>SMA Length</label>
+            <input type="number" id="inpSMA" value="30">
+          </div>
+          <div>
+            <label>Lookback</label>
+            <input type="number" id="inpLookback" value="25">
+          </div>
+          <div style="grid-column: span 2;">
+            <label>Risk Reward Ratio</label>
+            <input type="number" id="inpRR" value="2.2" step="0.1">
+          </div>
+        </div>
+      </div>
+      
+      <div class="settings-section">
+        <div class="settings-section-title">🔶 KN SMART TP SL</div>
+        <div class="settings-grid">
+          <div>
+            <label>Fast EMA</label>
+            <input type="number" id="inpFast" value="5">
+          </div>
+          <div>
+            <label>Slow EMA</label>
+            <input type="number" id="inpSlow" value="13">
+          </div>
+          <div>
+            <label>ATR Period</label>
+            <input type="number" id="inpATR" value="14">
+          </div>
+          <div>
+            <label>SL Multiplier</label>
+            <input type="number" id="inpSL" value="1.5" step="0.1">
+          </div>
+        </div>
+      </div>
+      
+      <div class="settings-section">
+        <div class="settings-section-title">🎯 TAKE PROFIT</div>
+        <div class="settings-grid">
+          <div>
+            <label>TP1 RR</label>
+            <input type="number" id="inpTP1" value="1" step="0.1">
+          </div>
+          <div>
+            <label>TP2 RR</label>
+            <input type="number" id="inpTP2" value="2" step="0.1">
+          </div>
+          <div>
+            <label>TP3 RR</label>
+            <input type="number" id="inpTP3" value="3" step="0.1">
+          </div>
+          <div>
+            <label>Line Length</label>
+            <input type="number" id="inpLine" value="15">
+          </div>
+        </div>
+      </div>
+      
+      <button class="btn-settings" onclick="applySettings()">✅ APPLY SETTINGS</button>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📋 SIGNAL LOG</div>
+        <button class="btn btn-danger" style="padding:2px 6px; font-size:9px;" onclick="clearLog()">Clear</button>
+      </div>
+      <div id="logBox" class="log-box">
+        <div class="log-entry"><span class="log-time">System:</span> Exness XAUUSD Ready</div>
+      </div>
+    </div>
+
+    <div class="fx-sniper-footer">
+      <h2>FX SNIPER CLUB</h2>
+      <p>Dashboard</p>
+    </div>
+    
+  </div>
+</div>
+
+<script>
+// ==========================================
+// CONFIGURATION
+// ==========================================
+let CONFIG = {
+  symbol: 'XAUUSD',
+  interval: '5',
+  smaLen: 30,
+  lookback: 25,
+  rrRatio: 2.2,
+  emaFastLen: 5,
+  emaSlowLen: 13,
+  atrLen: 14,
+  slAtrMult: 1.5,
+  tp1RR: 1.0,
+  tp2RR: 2.0,
+  tp3RR: 3.0,
+  lineLength: 15
+};
+
+let autoRefreshTimer = null;
+let candles = [];
+let lastSignalBarIndex = -1;
+let currentTrend = 'up';
+
+let trade = {
+  dir: 0, entry: null, sl: null, tp1: null, tp2: null, tp3: null,
+  tp1Hit: false, tp2Hit: false, tp3Hit: false, slHit: false
+};
+
+let notificationSettings = {
+  whatsapp: '',
+  telegramBotToken: '',
+  telegramChatId: ''
+};
+
+// ==========================================
+// MARKET SESSION DETECTOR
+// ==========================================
+function getMarketSession() {
+  const now = new Date();
+  const utcHour = now.getUTCHours();
+  const utcMin = now.getUTCMinutes();
+  const currentTime = utcHour * 100 + utcMin;
+  
+  // Asian Session: 00:00 - 09:00 UTC
+  if (currentTime >= 0 && currentTime < 900) {
+    return { name: 'Asian', class: 'session-asian', icon: '🌏' };
+  }
+  // London Session: 08:00 - 17:00 UTC
+  else if (currentTime >= 800 && currentTime < 1700) {
+    return { name: 'London', class: 'session-london', icon: '🇬' };
+  }
+  // New York Session: 13:00 - 22:00 UTC
+  else if (currentTime >= 1300 && currentTime < 2200) {
+    return { name: 'New York', class: 'session-ny', icon: '🇺🇸' };
+  }
+  // Overlap times
+  else if (currentTime >= 800 && currentTime < 900) {
+    return { name: 'Asian/London', class: 'session-london', icon: '🌏🇧' };
+  }
+  else if (currentTime >= 1300 && currentTime < 1700) {
+    return { name: 'London/NY', class: 'session-ny', icon: '🇬🇧🇺🇸' };
+  }
+  else {
+    return { name: 'Off-Peak', class: 'session-asian', icon: '😴' };
+  }
+}
+
+function updateMarketSession() {
+  const session = getMarketSession();
+  const sessionEl = document.getElementById('marketSession');
+  sessionEl.className = `session-badge ${session.class}`;
+  sessionEl.textContent = `${session.icon} ${session.name}`;
+}
+
+// ==========================================
+// TRADINGVIEW WIDGET - EXNESS XAUUSD
+// ==========================================
+function loadTradingViewWidget() {
+  const wrapper = document.getElementById('tvChartWrapper');
+  const loadingEl = document.getElementById('chartLoading');
+  
+  // Show loading
+  if (loadingEl) {
+    loadingEl.style.display = 'flex';
+  }
+  
+  const showSMA = document.getElementById('toggleSMA').checked;
+  const showEmaFast = document.getElementById('toggleEmaFast').checked;
+  const showEmaSlow = document.getElementById('toggleEmaSlow').checked;
+  
+  const studies = [];
+  if (showSMA) studies.push({"id":"MA@tv-basicstudies","inputs":{"length":CONFIG.smaLen,"source":"close","type":"SMA"}});
+  if (showEmaFast) studies.push({"id":"MA@tv-basicstudies","inputs":{"length":CONFIG.emaFastLen,"source":"close","type":"EMA"}});
+  if (showEmaSlow) studies.push({"id":"MA@tv-basicstudies","inputs":{"length":CONFIG.emaSlowLen,"source":"close","type":"EMA"}});
+  
+  const studiesJSON = JSON.stringify(studies);
+  
+  const widgetHTML = `
+    <iframe 
+      src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_widget&symbol=OANDA%3AXAUUSD&interval=${CONFIG.interval}&hidesidetoolbar=0&symboledit=0&saveimage=1&toolbarbg=131722&studies=${encodeURIComponent(studiesJSON)}&theme=dark&style=1&timezone=Asia%2FDhaka&withdateranges=1&hideideas=1&enable_publishing=false&hide_top_toolbar=false&hide_legend=false&save_image=false&locale=en"
+      allowtransparency="true"
+      scrolling="no"
+      allowfullscreen
+      onload="document.getElementById('chartLoading').style.display='none'">
+    </iframe>
+  `;
+  
+  wrapper.innerHTML = widgetHTML;
+  
+  // Hide loading after 5 seconds (fallback)
+  setTimeout(() => {
+    if (loadingEl) {
+      loadingEl.style.display = 'none';
+    }
+  }, 5000);
+}
+
+function changeTimeframe() {
+  CONFIG.interval = document.getElementById('intervalSelect').value;
+  loadTradingViewWidget();
+  loadAndAnalyze();
+}
+
+function refreshChart() {
+  loadTradingViewWidget();
+}
+
+function reloadChart() {
+  loadTradingViewWidget();
+}
+
+// ==========================================
+// FETCH HISTORICAL CANDLES - EXNESS GOLD
+// ==========================================
+async function fetchCandles() {
+  try {
+    const url = `https://api.binance.com/api/v3/klines?symbol=PAXGUSDT&interval=${CONFIG.interval}m&limit=500`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('API error: ' + res.status);
+    const raw = await res.json();
+    
+    return raw.map(k => ({
+      time: Math.floor(k[0] / 1000),
+      open: parseFloat(k[1]),
+      high: parseFloat(k[2]),
+      low: parseFloat(k[3]),
+      close: parseFloat(k[4]),
+      volume: parseFloat(k[5])
+    }));
+  } catch (err) {
+    console.error('Candle fetch error:', err);
+    addLog('system', '❌ Failed to fetch candles: ' + err.message);
+    return [];
+  }
+}
+
+// ==========================================
+// TECHNICAL INDICATORS
+// ==========================================
+function calcSMA(data, period) {
+  const result = [];
+  for (let i = 0; i < data.length; i++) {
+    if (i < period - 1) { result.push(null); continue; }
+    let sum = 0;
+    for (let j = 0; j < period; j++) sum += data[i - j].close;
+    result.push(sum / period);
+  }
+  return result;
+}
+
+function calcEMA(data, period) {
+  const result = [];
+  const k = 2 / (period + 1);
+  let ema = data[0].close;
+  for (let i = 0; i < data.length; i++) {
+    if (i === 0) { ema = data[i].close; }
+    else { ema = data[i].close * k + ema * (1 - k); }
+    result.push(ema);
+  }
+  return result;
+}
+
+function calcATR(data, period) {
+  const tr = [];
+  for (let i = 0; i < data.length; i++) {
+    if (i === 0) { tr.push(data[i].high - data[i].low); continue; }
+    const hl = data[i].high - data[i].low;
+    const hc = Math.abs(data[i].high - data[i-1].close);
+    const lc = Math.abs(data[i].low - data[i-1].close);
+    tr.push(Math.max(hl, hc, lc));
+  }
+  const result = [];
+  for (let i = 0; i < tr.length; i++) {
+    if (i < period - 1) { result.push(null); continue; }
+    let sum = 0;
+    for (let j = 0; j < period; j++) sum += tr[i - j];
+    result.push(sum / period);
+  }
+  return result;
+}
+
+// ==========================================
+// MAIN ANALYSIS
+// ==========================================
+async function loadAndAnalyze() {
+  addLog('system', '📊 Loading 500 candles...');
+  
+  candles = await fetchCandles();
+  if (candles.length === 0) {
+    addLog('system', '⚠️ No data loaded. Check internet connection.');
+    return;
+  }
+  
+  addLog('system', `✅ Loaded ${candles.length} candles`);
+  
+  const sma = calcSMA(candles, CONFIG.smaLen);
+  const emaFast = calcEMA(candles, CONFIG.emaFastLen);
+  const emaSlow = calcEMA(candles, CONFIG.emaSlowLen);
+  const atr = calcATR(candles, CONFIG.atrLen);
+  
+  let latestSignal = null;
+  let latestSignalIndex = -1;
+  
+  for (let i = 1; i < candles.length; i++) {
+    if (sma[i] === null || atr[i] === null) continue;
+    
+    const prevEmaFast = emaFast[i-1];
+    const prevEmaSlow = emaSlow[i-1];
+    const currEmaFast = emaFast[i];
+    const currEmaSlow = emaSlow[i];
+    const currClose = candles[i].close;
+    const currSMA = sma[i];
+    
+    const isUptrend = currClose >= currSMA;
+    const crossUp = prevEmaFast <= prevEmaSlow && currEmaFast > currEmaSlow;
+    const crossDown = prevEmaFast >= prevEmaSlow && currEmaFast < currEmaSlow;
+    
+    if (crossUp && isUptrend) {
+      latestSignal = { type: 'BUY', index: i, candle: candles[i] };
+      latestSignalIndex = i;
+    }
+    else if (crossDown && !isUptrend) {
+      latestSignal = { type: 'SELL', index: i, candle: candles[i] };
+      latestSignalIndex = i;
+    }
+  }
+  
+  if (latestSignal) {
+    addLog('system', `🎯 Found latest ${latestSignal.type} at candle #${latestSignalIndex}`);
+    
+    const signalCandle = latestSignal.candle;
+    const signalATR = atr[latestSignalIndex];
+    
+    const entry = signalCandle.close;
+    const risk = signalATR * CONFIG.slAtrMult;
+    const sl = latestSignal.type === 'BUY' ? entry - risk : entry + risk;
+    
+    const slDistance = Math.abs(entry - sl);
+    
+    let tp1, tp2, tp3;
+    if (latestSignal.type === 'BUY') {
+      tp1 = entry + (slDistance * CONFIG.tp1RR);
+      tp2 = entry + (slDistance * CONFIG.tp2RR);
+      tp3 = entry + (slDistance * CONFIG.tp3RR);
+    } else {
+      tp1 = entry - (slDistance * CONFIG.tp1RR);
+      tp2 = entry - (slDistance * CONFIG.tp2RR);
+      tp3 = entry - (slDistance * CONFIG.tp3RR);
+    }
+    
+    let tp1Hit = false, tp2Hit = false, tp3Hit = false, slHit = false;
+    
+    for (let j = latestSignalIndex + 1; j < candles.length; j++) {
+      const c = candles[j];
+      if (latestSignal.type === 'BUY') {
+        if (!tp1Hit && c.high >= tp1) tp1Hit = true;
+        if (!tp2Hit && c.high >= tp2) tp2Hit = true;
+        if (!tp3Hit && c.high >= tp3) tp3Hit = true;
+        if (!slHit && c.low <= sl) slHit = true;
+      } else {
+        if (!tp1Hit && c.low <= tp1) tp1Hit = true;
+        if (!tp2Hit && c.low <= tp2) tp2Hit = true;
+        if (!tp3Hit && c.low <= tp3) tp3Hit = true;
+        if (!slHit && c.high >= sl) slHit = true;
+      }
+      if (tp3Hit || slHit) break;
+    }
+    
+    if (!tp3Hit && !slHit) {
+      trade = {
+        dir: latestSignal.type === 'BUY' ? 1 : -1,
+        entry: entry,
+        sl: sl,
+        tp1: tp1,
+        tp2: tp2,
+        tp3: tp3,
+        tp1Hit: tp1Hit,
+        tp2Hit: tp2Hit,
+        tp3Hit: false,
+        slHit: false
+      };
+      
+      lastSignalBarIndex = latestSignalIndex;
+      
+      addLog(latestSignal.type === 'BUY' ? 'buy' : 'sell', 
+        `${latestSignal.type} @ $${entry.toFixed(2)} | SL: $${sl.toFixed(2)} | TP1: $${tp1.toFixed(2)}`);
+      
+      document.getElementById('signalActions').style.display = 'block';
+      
+      if (latestSignalIndex === candles.length - 2 || latestSignalIndex === candles.length - 1) {
+        sendNotifications();
+      }
+    } else {
+      trade = {
+        dir: 0, entry: null, sl: null, tp1: null, tp2: null, tp3: null,
+        tp1Hit: false, tp2Hit: false, tp3Hit: false, slHit: false
+      };
+      addLog('system', `⏹️ Previous ${latestSignal.type} trade finished`);
+    }
+  } else {
+    addLog('system', '⏳ No signal found');
+    trade = {
+      dir: 0, entry: null, sl: null, tp1: null, tp2: null, tp3: null,
+      tp1Hit: false, tp2Hit: false, tp3Hit: false, slHit: false
+    };
+  }
+  
+  const lastPrice = candles[candles.length - 1].close;
+  updatePriceDisplay(lastPrice);
+  updateDashboardUI(lastPrice >= sma[sma.length - 1]);
+}
+
+function updatePriceDisplay(price) {
+  document.getElementById('headerPrice').textContent = '$' + price.toFixed(2);
+  document.getElementById('currentPrice').textContent = '$' + price.toFixed(2);
+  
+  if (trade.dir !== 0 && trade.entry !== null) {
+    const pnl = trade.dir === 1 ? price - trade.entry : trade.entry - price;
+    const pct = (pnl / trade.entry) * 100;
+    const pnlBox = document.getElementById('pnlBox');
+    pnlBox.textContent = `${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)} (${pct.toFixed(2)}%)`;
+    pnlBox.className = 'pnl-box ' + (pnl >= 0 ? 'positive' : 'negative');
+    
+    checkTPSL(price);
+  }
+}
+
+function checkTPSL(currentPrice) {
+  if (trade.dir === 1) {
+    if (!trade.tp1Hit && currentPrice >= trade.tp1) { trade.tp1Hit = true; addLog('tp', `✅ TP1 HIT @ $${trade.tp1.toFixed(2)}`); }
+    if (!trade.tp2Hit && currentPrice >= trade.tp2) { trade.tp2Hit = true; addLog('tp', `✅ TP2 HIT @ $${trade.tp2.toFixed(2)}`); }
+    if (!trade.tp3Hit && currentPrice >= trade.tp3) { trade.tp3Hit = true; addLog('tp', `🎉 TP3 HIT @ $${trade.tp3.toFixed(2)}`); trade.dir = 0; }
+    if (!trade.slHit && currentPrice <= trade.sl) { trade.slHit = true; addLog('sell', `❌ SL HIT @ $${trade.sl.toFixed(2)}`); trade.dir = 0; }
+  } else if (trade.dir === -1) {
+    if (!trade.tp1Hit && currentPrice <= trade.tp1) { trade.tp1Hit = true; addLog('tp', `✅ TP1 HIT @ $${trade.tp1.toFixed(2)}`); }
+    if (!trade.tp2Hit && currentPrice <= trade.tp2) { trade.tp2Hit = true; addLog('tp', `✅ TP2 HIT @ $${trade.tp2.toFixed(2)}`); }
+    if (!trade.tp3Hit && currentPrice <= trade.tp3) { trade.tp3Hit = true; addLog('tp', `🎉 TP3 HIT @ $${trade.tp3.toFixed(2)}`); trade.dir = 0; }
+    if (!trade.slHit && currentPrice >= trade.sl) { trade.slHit = true; addLog('sell', `❌ SL HIT @ $${trade.sl.toFixed(2)}`); trade.dir = 0; }
+  }
+  
+  updateDashboardUI();
+}
+
+function updateDashboardUI(isUptrend = true) {
+  currentTrend = isUptrend ? 'up' : 'down';
+  
+  const trendEl = document.getElementById('currentTrend');
+  if (isUptrend) { 
+    trendEl.className = 'trend-badge trend-up';
+    trendEl.textContent = '📈 UPTREND';
+  } else { 
+    trendEl.className = 'trend-badge trend-down';
+    trendEl.textContent = '📉 DOWNTREND';
+  }
+  
+  const signalBox = document.getElementById('signalBox');
+  const statusEl = document.getElementById('tradeStatus');
+  
+  if (trade.dir === 1) {
+    signalBox.textContent = '🟢 BUY ACTIVE';
+    signalBox.className = 'signal-box buy';
+  } else if (trade.dir === -1) {
+    signalBox.textContent = '🔴 SELL ACTIVE';
+    signalBox.className = 'signal-box sell';
+  } else {
+    signalBox.textContent = '⚪ NO TRADE';
+    signalBox.className = 'signal-box neutral';
+    document.getElementById('signalActions').style.display = 'none';
+  }
+  
+  document.getElementById('entryPrice').textContent = trade.entry ? '$' + trade.entry.toFixed(2) : '---';
+  document.getElementById('slPrice').textContent = trade.sl ? '$' + trade.sl.toFixed(2) : '---';
+  
+  const atr = trade.entry ? trade.entry * 0.003 : 0;
+  document.getElementById('atrValue').textContent = atr ? atr.toFixed(2) : '---';
+  
+  updateTPBox('tp1', trade.tp1, trade.tp1Hit, CONFIG.tp1RR);
+  updateTPBox('tp2', trade.tp2, trade.tp2Hit, CONFIG.tp2RR);
+  updateTPBox('tp3', trade.tp3, trade.tp3Hit, CONFIG.tp3RR);
+  
+  if (trade.dir === 0) {
+    if (trade.slHit) { statusEl.textContent = '❌ SL HIT'; statusEl.className = 'status-pill loss'; }
+    else if (trade.tp3Hit) { statusEl.textContent = '🎉 TP3 CLOSED'; statusEl.className = 'status-pill win'; }
+    else { statusEl.textContent = '⏳ WAITING'; statusEl.className = 'status-pill wait'; }
+  } else if (trade.tp3Hit) { statusEl.textContent = '🎉 TP3 HIT'; statusEl.className = 'status-pill win'; }
+  else if (trade.tp2Hit) { statusEl.textContent = '✅ TP2 HIT'; statusEl.className = 'status-pill win'; }
+  else if (trade.tp1Hit) { statusEl.textContent = '✅ TP1 HIT'; statusEl.className = 'status-pill win'; }
+  else { statusEl.textContent = '🔵 ACTIVE'; statusEl.className = 'status-pill active'; }
+}
+
+function updateTPBox(id, price, hit, rr) {
+  const box = document.getElementById(id + 'Box');
+  const priceEl = document.getElementById(id + 'Price');
+  const statusEl = document.getElementById(id + 'Status');
+  box.querySelector('.tp-label').textContent = `${id.toUpperCase()} (${rr}R)`;
+  priceEl.textContent = price ? '$' + price.toFixed(2) : '---';
+  if (hit) {
+    box.classList.add('hit');
+    statusEl.textContent = '✓ HIT';
+  } else {
+    box.classList.remove('hit');
+    statusEl.textContent = 'Pending';
+  }
+}
+
+function copyPrice(elementId) {
+  const element = document.getElementById(elementId);
+  const text = element.textContent.replace('$', '').trim();
+  
+  if (text === '---') {
+    addLog('system', '⚠️ No price to copy');
+    return;
+  }
+  
+  navigator.clipboard.writeText(text).then(() => {
+    addLog('system', `📋 Copied: ${text}`);
+    
+    const originalText = element.textContent;
+    element.textContent = '✓ Copied!';
+    element.style.color = '#10b981';
+    setTimeout(() => {
+      element.textContent = originalText;
+      element.style.color = '';
+    }, 1000);
+  }).catch(err => {
+    console.error('Copy failed:', err);
+  });
+}
+
+function sendNotifications() {
+  sendWhatsApp();
+  sendTelegram();
+  sendBrowserNotification();
+}
+
+function sendWhatsApp() {
+  if (!notificationSettings.whatsapp) {
+    addLog('system', '⚠️ WhatsApp number not set');
+    return;
+  }
+  
+  const signalType = trade.dir === 1 ? '🟢 BUY' : '🔴 SELL';
+  const message = `${signalType} Signal - Exness Gold XAUUSD\n\n` +
+    `Entry: $${trade.entry.toFixed(2)}\n` +
+    `SL: $${trade.sl.toFixed(2)}\n` +
+    `TP1: $${trade.tp1.toFixed(2)}\n` +
+    `TP2: $${trade.tp2.toFixed(2)}\n` +
+    `TP3: $${trade.tp3.toFixed(2)}\n\n` +
+    `Time: ${new Date().toLocaleString()}`;
+  
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappUrl = `https://wa.me/${notificationSettings.whatsapp.replace('+', '')}?text=${encodedMessage}`;
+  
+  window.open(whatsappUrl, '_blank');
+  addLog('system', '📱 WhatsApp notification sent');
+}
+
+function sendTelegram() {
+  if (!notificationSettings.telegramBotToken || !notificationSettings.telegramChatId) {
+    addLog('system', '⚠️ Telegram settings not complete');
+    return;
+  }
+  
+  const signalType = trade.dir === 1 ? '🟢 BUY' : '🔴 SELL';
+  const message = `${signalType} Signal - Exness Gold XAUUSD\n\n` +
+    `Entry: $${trade.entry.toFixed(2)}\n` +
+    `SL: $${trade.sl.toFixed(2)}\n` +
+    `TP1: $${trade.tp1.toFixed(2)}\n` +
+    `TP2: $${trade.tp2.toFixed(2)}\n` +
+    `TP3: $${trade.tp3.toFixed(2)}\n\n` +
+    `Time: ${new Date().toLocaleString()}`;
+  
+  const telegramUrl = `https://api.telegram.org/bot${notificationSettings.telegramBotToken}/sendMessage?chat_id=${notificationSettings.telegramChatId}&text=${encodeURIComponent(message)}`;
+  
+  fetch(telegramUrl).then(res => res.json()).then(data => {
+    if (data.ok) {
+      addLog('system', '✈️ Telegram notification sent');
+    } else {
+      addLog('system', '❌ Telegram failed: ' + data.description);
+    }
+  }).catch(err => {
+    addLog('system', '❌ Telegram error: ' + err.message);
+  });
+}
+
+function sendBrowserNotification() {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const signalType = trade.dir === 1 ? 'BUY' : 'SELL';
+    new Notification(`Gold Signal: ${signalType}`, {
+      body: `Entry: $${trade.entry.toFixed(2)}\nSL: $${trade.sl.toFixed(2)}\nTP1: $${trade.tp1.toFixed(2)}`,
+      icon: '🥇'
+    });
+  } else if ('Notification' in window && Notification.permission !== 'denied') {
+    Notification.requestPermission();
+  }
+}
+
+function saveNotificationSettings() {
+  notificationSettings.whatsapp = document.getElementById('whatsappNumber').value;
+  notificationSettings.telegramBotToken = document.getElementById('telegramBotToken').value;
+  notificationSettings.telegramChatId = document.getElementById('telegramChatId').value;
+  
+  localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
+  addLog('system', '💾 Notification settings saved');
+  
+  if ('Notification' in window && Notification.permission !== 'denied') {
+    Notification.requestPermission();
+  }
+}
+
+function applySettings() {
+  CONFIG.smaLen = parseInt(document.getElementById('inpSMA').value) || 30;
+  CONFIG.lookback = parseInt(document.getElementById('inpLookback').value) || 25;
+  CONFIG.rrRatio = parseFloat(document.getElementById('inpRR').value) || 2.2;
+  CONFIG.emaFastLen = parseInt(document.getElementById('inpFast').value) || 5;
+  CONFIG.emaSlowLen = parseInt(document.getElementById('inpSlow').value) || 13;
+  CONFIG.atrLen = parseInt(document.getElementById('inpATR').value) || 14;
+  CONFIG.slAtrMult = parseFloat(document.getElementById('inpSL').value) || 1.5;
+  CONFIG.tp1RR = parseFloat(document.getElementById('inpTP1').value) || 1.0;
+  CONFIG.tp2RR = parseFloat(document.getElementById('inpTP2').value) || 2.0;
+  CONFIG.tp3RR = parseFloat(document.getElementById('inpTP3').value) || 3.0;
+  CONFIG.lineLength = parseInt(document.getElementById('inpLine').value) || 15;
+  
+  addLog('system', `✅ Settings Applied`);
+  
+  reloadChart();
+  loadAndAnalyze();
+}
+
+function addLog(type, msg) {
+  const logBox = document.getElementById('logBox');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry ' + type;
+  const time = new Date().toLocaleTimeString();
+  entry.innerHTML = `<span class="log-time">[${time}]</span>${msg}`;
+  logBox.insertBefore(entry, logBox.firstChild);
+  while (logBox.children.length > 20) logBox.removeChild(logBox.lastChild);
+}
+
+function clearLog() {
+  document.getElementById('logBox').innerHTML = '<div class="log-entry"><span class="log-time">System:</span> Log cleared</div>';
+}
+
+function toggleAutoRefresh() {
+  const btn = document.getElementById('autoBtn');
+  if (autoRefreshTimer) {
+    clearInterval(autoRefreshTimer);
+    autoRefreshTimer = null;
+    btn.textContent = 'Auto: OFF';
+    addLog('system', 'Auto-refresh OFF');
+  } else {
+    autoRefreshTimer = setInterval(() => {
+      loadAndAnalyze();
+      updateMarketSession();
+    }, 30000);
+    btn.textContent = 'Auto: ON (30s)';
+    addLog('system', 'Auto-refresh ON (30s)');
+  }
+}
+
+// ==========================================
+// INITIALIZATION
+// ==========================================
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('notificationSettings');
+  if (saved) {
+    notificationSettings = JSON.parse(saved);
+    document.getElementById('whatsappNumber').value = notificationSettings.whatsapp || '';
+    document.getElementById('telegramBotToken').value = notificationSettings.telegramBotToken || '';
+    document.getElementById('telegramChatId').value = notificationSettings.telegramChatId || '';
+  }
+  
+  // Load chart and data automatically
+  loadTradingViewWidget();
+  loadAndAnalyze();
+  updateMarketSession();
+  
+  // Update market session every minute
+  setInterval(updateMarketSession, 60000);
+});
+</script>
+
+</body>
+</html>
